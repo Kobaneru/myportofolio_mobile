@@ -128,3 +128,50 @@ Dalam penyusunan dan peninjauan dokumentasi Tugas 7 ini, saya memanfaatkan asist
 
 ### Analisis Kritis Keterbatasan AI & Perbaikan Manual
 Dokumentasi yang dibantu AI perlu diperiksa terhadap spesifikasi tugas dan kode aktual. Panduan awal README berfokus pada Android, lalu disesuaikan setelah membaca Tutorial 08 yang mengutamakan Chrome untuk sesi lab. Log Django/HTML/CSS dan disclosure Tugas 1 yang terbawa dari referensi juga diganti agar sesuai dengan proyek Flutter minggu ini. Keberadaan nama tombol tidak membuktikan bahwa fiturnya sudah lengkap: berdasarkan kode saat ini, tombol hanya menampilkan SnackBar. Jawaban reflektif tetap dipertahankan untuk ditinjau dan diperbaiki sendiri berdasarkan saran di percakapan. Pembacaan kode untuk dokumentasi ini belum membuktikan aplikasi bebas masalah saat dijalankan atau bahwa hasil `flutter analyze` sudah bersih.
+
+---
+
+### Minggu 12 (Tutorial 09 & Individual Assignment 8)
+
+* Menerapkan pola navigasi Tutorial 09 dan memisahkan halaman di `lib/screens/` dari komponen di `lib/widgets/`. Kartu **Tambah Pengalaman** dan **Tambah Pendidikan** membuka formulir dengan `Navigator.push()`. Kedua formulir juga bisa dibuka dari `LeftDrawer`, dan opsi **Home** memakai `Navigator.pushReplacement()`.
+* Membuat formulir Pengalaman dan Pendidikan menggunakan `StatefulWidget`, `Form`, dan satu `GlobalKey<FormState>` per formulir. Halaman utama dan kedua formulir menggunakan warna `AppBar` dari tema aplikasi. Isi formulir dapat digulir dengan `SingleChildScrollView`.
+* Menyesuaikan input dengan model portofolio Django. Form Pengalaman menyediakan pilihan kategori dan URL thumbnail opsional. Form Pendidikan menyediakan gelar atau program studi dan deskripsi opsional. Nama pengalaman, nama institusi, dan gelar atau program studi dibatasi hingga 255 karakter. URL thumbnail yang diisi diperiksa formatnya dan dibatasi hingga 200 karakter.
+* Menggunakan `showDatePicker()` untuk memilih tanggal dan menampilkannya dalam format `dd/mm/yyyy`. Tanggal mulai wajib untuk kedua formulir. Tanggal selesai wajib untuk Pendidikan dan opsional untuk Pengalaman. Jika diisi, tanggal selesai harus sama dengan atau sesudah tanggal mulai.
+* Menampilkan ringkasan seluruh isian dalam `AlertDialog` setelah **Save** lolos validasi. Tombol **OK** menutup dialog dan mereset formulir. Alur ini berjalan secara lokal di Flutter tanpa mengirim data ke Django.
+* Menambahkan tes widget yang memeriksa tanggal selesai wajib pada Pendidikan, batas panjang teks, dan validasi URL thumbnail opsional pada Pengalaman.
+
+---
+
+### Tugas 8
+
+1. Navigator.push() bertujuan untuk menambahkan suatu route ke dalam stack Navigator sehingga route tersebut berada di paling atas, sedangkan Navigator.pushReplacement() bertujuan untuk mengganti route teratas di stack Navigator saat ini dengan suatu route baru yang ingin ditambahkan, serta Navigator.pop() bertujuan untuk menghapus route teratas di stack Navigator saat ini. Metode yang digunakan untuk membuka formulir dari kartu aksi ialah Navigator.push() yang berarti menambahkan route baru ke stack Navigator, tanpa menghapus route teratas saat ini. Opsi Home di drawer membawa pengguna ke halaman utama dengan cara Navigator.pushReplacement(), yaitu dengan mengganti route teratas stack saat ini dengan route Home sehingga yang ditampilkan di layar adalah Home.
+
+2. Susunan Scaffold, AppBar, dan Drawer membantu menjaga struktur halaman tetap konsisten melalui pendefinisian parameter atau atribut yang sama pada setiap halaman/route. Scaffold menyediakan kerangka halaman yang menempatkan AppBar, Drawer, dan isi halaman. Contohnya, penggunaan `backgroundColor: Theme.of(context).colorScheme.primary` di AppBar halaman utama, tambah pengalaman, dan tambah pendidikan menghasilkan warna AppBar yang konsisten, atau penggunaan LeftDrawer pada ketiga halaman.
+
+3. Tata letak tersebut dipilih untuk formulir karena formulir untuk suatu model bisa memiliki field yang banyak sehingga penggunaan `SingleChildScrollView` meningkatkan fleksibilitas tampilan ketika field tidak cukup ditampilkan dalam satu layar, maka layar dapat digulir sehingga field akan dilanjutkan untuk ditampilkan di bawahnya dan pengguna tetap dapat mengaksesnya. Tanpa hal tersebut, konten bisa meluap yang menyebabkan tampilan field akan terpotong di mobile. Fungsi dari widget pengatur jarak adalah memberikan ruang di antara 2 widget agar tampilannya tidak terlalu sesak, sedangkan widget penggulir fungsinya ialah supaya layar dapat digulir untuk melihat field lanjutan di bawah ketika ruang layar terbatas. Column menyusun input secara vertikal, Padding memberi jarak di sekitar field, dan SizedBox memberi jarak antara label tanggal dan kotak input. SingleChildScrollView membuat field terakhir dan tombol Save tetap bisa dijangkau saat keyboard mengurangi ruang layar.
+
+4. Saat tombol simpan ditekan, GlobalKey<FormState> bertujuan sebagai key yang digunakan untuk mengakses FormState oleh parent widget form supaya dapat mengenali state form saat ini, validator bertujuan sebagai metode validasi yang akan dipanggil untuk setiap field. Ketika tombol Save ditekan, _formKey.currentState!.validate() menjalankan validator setiap field dan mengembalikan true jika semuanya valid, dan validate() adalah fungsi yang dipanggil ketika kita menekan save supaya Flutter langsung otomatis memanggil semua validator field yang ada dan mengembalikan true jika semua field valid. Contoh nilai yang ditolak ketika validasi ialah nama experience yang diisi '   '. Artinya, Flutter akan menganggapnya sebagai '' karena Validator memanggil value.trim() sehingga nama yang hanya berisi spasi menghasilkan string kosong dan ditolak. Jenis input/papan ketik saja belum cukup untuk pengecekan karena bisa jadi user tidak mengisi input atau melakukan input di luar batas, misal maksimal 255 karakter sehingga diperlukan validasi lanjut agar memenuhi semua syarat yang telah ditetapkan.
+
+---
+
+## 🤖 Pernyataan Penggunaan AI (AI Disclosure)
+
+Dalam pengerjaan Tugas 8, saya memanfaatkan asisten kecerdasan buatan untuk mendiskusikan formulir, meninjau implementasi terhadap rubrik, serta memperbarui dokumentasi dengan rincian berikut.
+
+* **Alat yang Digunakan:** Codex
+* **Strategi Prompting:**
+  * Memberikan contoh formulir website dan meminta penjelasan tentang input tanggal, penggunaan satu `_formKey`, serta cara menampilkan dan mereset tanggal pada ringkasan.
+  * Meminta perbandingan form Pendidikan dengan form Pengalaman dan menetapkan bahwa tanggal selesai wajib untuk Pendidikan serta opsional untuk Pengalaman.
+  * Memberikan PDF Tugas 8 dan Tutorial 09 sebagai acuan audit. Setelah meninjau hasilnya, meminta penerapan validasi lokal dan meminta saran layout serta navigasi dijelaskan untuk ditinjau secara manual.
+  * Meminta pembaruan log Minggu 12 berdasarkan implementasi aktual dan pengecekan jawaban reflektif dengan penjelasan di percakapan.
+* **Bagian Spesifik yang Dibantu:**
+  * Menjelaskan `FormField<DateTime>`, `showDatePicker()`, reset nilai tanggal, dan cara menampilkan isian opsional dalam ringkasan.
+  * Menambahkan aturan tanggal selesai wajib pada Pendidikan, validasi batas panjang teks dan URL thumbnail, serta tes widget untuk memeriksa perilaku tersebut.
+  * Meninjau kesesuaian aplikasi dengan rubrik, memperbarui log Minggu 12, dan memberi masukan atas empat jawaban reflektif.
+* **Log Obrolan / Riwayat:** [Tautan log chat atau ringkasan obrolan](https://chatgpt.com/s/cx_6afad543c9d081919a669e6dd0f69ad1)
+
+### Analisis Kritis Keterbatasan AI & Perbaikan Manual
+
+Usulan awal Codex memakai dua key tambahan untuk membaca nilai tanggal. Setelah saya menanyakan alasan penggunaan key terpisah, implementasi disesuaikan agar satu `_formKey` cukup untuk validasi formulir, dengan nilai tanggal disimpan di state halaman untuk ringkasan. Saya juga mengoreksi hasil audit yang semula menganggap opsi **Add Project** harus dipulihkan. Asisten dosen mengizinkan opsi tersebut diganti dengan **Experiences** pada proyek ini.
+
+Saya memeriksa saran layout dan navigasi terhadap Tutorial 09, lalu memilih mempertahankan pola yang dipakai tutorial. Saya juga menyamakan warna `AppBar` kedua formulir dengan halaman utama. Untuk validasi, model Django dipakai sebagai acuan aturan. Karena ringkasan dibuat di Flutter, pemeriksaan yang saya setujui dijalankan di form Flutter. Tes widget dipakai untuk memeriksa pesan validasi dan beberapa nilai batas.
