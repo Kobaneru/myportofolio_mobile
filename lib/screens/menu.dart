@@ -1,6 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/widgets/left_drawer.dart';
-import 'package:myportofolio_mobile/widgets/project_card.dart';
+import 'package:myportofolio_mobile/widgets/experience_card.dart';
 
 class MyHomePage extends StatelessWidget {
   MyHomePage({super.key});
@@ -10,8 +10,8 @@ class MyHomePage extends StatelessWidget {
   final String kelas = "PBP B";
 
   final List<ItemHomepage> items = [
-    ItemHomepage("Lihat Pengalaman", Icons.folder, Colors.blue),
-    ItemHomepage("Tambah Pengalaman", Icons.add_circle, Colors.green),
+    ItemHomepage("Tambah Pengalaman", Icons.add_circle, Colors.blue),
+    ItemHomepage("Tambah Pendidikan", Icons.add_circle, Colors.green),
     ItemHomepage("Logout", Icons.logout, Colors.red),
   ];
 
