@@ -203,8 +203,12 @@ class _EducationFormPageState extends State<EducationFormPage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text('Nama Institusi: $_institutionName'),
-                                    Text('Gelar / Program Studi: ${_major.trim().isEmpty ? '—' : _major.trim()}'),
-                                    Text('Deskripsi: ${_description.trim().isEmpty ? '—' : _description.trim()}'),
+                                    Text(
+                                      'Gelar / Program Studi: ${_major.trim().isEmpty ? '—' : _major.trim()}',
+                                    ),
+                                    Text(
+                                      'Deskripsi: ${_description.trim().isEmpty ? '—' : _description.trim()}',
+                                    ),
                                     Text(
                                       'Tanggal Mulai: ${_formatDate(startDate)}',
                                     ),

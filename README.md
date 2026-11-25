@@ -168,7 +168,7 @@ Dalam pengerjaan Tugas 8, saya memanfaatkan asisten kecerdasan buatan untuk mend
   * Menjelaskan `FormField<DateTime>`, `showDatePicker()`, reset nilai tanggal, dan cara menampilkan isian opsional dalam ringkasan.
   * Menambahkan aturan tanggal selesai wajib pada Pendidikan, validasi batas panjang teks dan URL thumbnail, serta tes widget untuk memeriksa perilaku tersebut.
   * Meninjau kesesuaian aplikasi dengan rubrik, memperbarui log Minggu 12, dan memberi masukan atas empat jawaban reflektif.
-* **Log Obrolan / Riwayat:** [Tautan log chat atau ringkasan obrolan](https://chatgpt.com/s/cx_6afad543c9d081919a669e6dd0f69ad1)
+* **Log Obrolan / Riwayat:** [Tautan log chat atau ringkasan obrolan](https://chatgpt.com/s/cx_6b04d462409c81918a8751200c0ac6e3)
 
 ### Analisis Kritis Keterbatasan AI & Perbaikan Manual
 

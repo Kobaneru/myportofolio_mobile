@@ -1,5 +1,11 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:myportofolio_mobile/models/experience.dart';
+import 'package:http/http.dart' as http;
+import 'package:myportofolio_mobile/services/api_client.dart';
+import 'package:myportofolio_mobile/services/auth_state.dart';
+import 'package:myportofolio_mobile/widgets/auth_guard.dart';
 import 'package:myportofolio_mobile/widgets/left_drawer.dart';
+import 'package:provider/provider.dart';
 
 class ExperienceFormPage extends StatefulWidget {
   const ExperienceFormPage({super.key});
@@ -13,15 +19,23 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
 
   String _experienceName = "";
   String _description = "";
-  String _category = "Full-Time"; // default
+  String _category = "full-time"; // default
   String _experienceLink = "";
   DateTime? _startDate;
   DateTime? _endDate;
+  bool _isSubmitting = false;
 
   String _formatDate(DateTime date) {
     final day = date.day.toString().padLeft(2, '0');
     final month = date.month.toString().padLeft(2, '0');
     return '$day/$month/${date.year}';
+  }
+
+  String _formatIsoDate(DateTime date) {
+    final year = date.year.toString().padLeft(4, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
   }
 
   Widget _dateField({
@@ -81,14 +95,14 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
     );
   }
 
-  final List<String> _categories = [
-    'Freelance',
-    'Full-Time',
-    'Part-Time',
-    'Volunteer',
-    'Research',
-    'Internship',
-  ];
+  static const _categories = <String, String>{
+    'freelance': 'Freelance',
+    'full-time': 'Full-Time',
+    'part-time': 'Part-Time',
+    'volunteer': 'Volunteer',
+    'research': 'Research',
+    'internship': 'Internship',
+  };
 
   String? _validateThumbnailUrl(String? value) {
     final text = value?.trim() ?? '';
@@ -107,7 +121,9 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
     }
 
     final host = uri.host;
-    final domain = host.endsWith('.') ? host.substring(0, host.length - 1) : host;
+    final domain = host.endsWith('.')
+        ? host.substring(0, host.length - 1)
+        : host;
     final labels = domain.split('.');
     // Uri already parses IPv6 literals. Other hosts need a valid domain or localhost.
     if (host != 'localhost' &&
@@ -118,15 +134,117 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
     return null;
   }
 
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    if (!await ensureLoggedIn(context)) return;
+    if (!mounted) return;
+
+    final token = context.read<AuthState>().token;
+    if (token == null) return;
+
+    final startDate = _startDate!;
+    final endDate = _endDate;
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    final newExperience = Experience(
+      title: _experienceName.trim(),
+      description: _description.trim(),
+      category: _category,
+      thumbnail: _experienceLink.trim(),
+      startedAt: _formatIsoDate(startDate),
+      endedAt: endDate == null ? '' : _formatIsoDate(endDate),
+    );
+
+    try {
+      await context.read<ApiClient>().createExperience(
+        newExperience,
+        token: token,
+      );
+      if (!mounted) return;
+
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) {
+          return AlertDialog(
+            title: const Text('Pengalaman berhasil ditambahkan!'),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Nama Pengalaman: $_experienceName'),
+                  Text('Deskripsi: $_description'),
+                  Text('Kategori: ${_categories[_category]}'),
+                  Text('URL Thumbnail: $_experienceLink'),
+                  Text('Tanggal Mulai: ${_formatDate(startDate)}'),
+                  Text(
+                    'Tanggal Selesai: ${endDate == null ? '—' : _formatDate(endDate)}',
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                child: const Text('OK'),
+                onPressed: () {
+                  Navigator.pop(dialogContext);
+                },
+              ),
+            ],
+          );
+        },
+      );
+
+      if (!mounted) return;
+      Navigator.pop(context, true);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      if (e.statusCode == 401) {
+        context.read<AuthState>().clearSession();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            const SnackBar(
+              content: Text('Sesi berakhir. Silakan login kembali.'),
+            ),
+          );
+        await ensureLoggedIn(context);
+      } else {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(
+                'Gagal menyimpan pengalaman (HTTP ${e.statusCode}).',
+              ),
+            ),
+          );
+      }
+    } on http.ClientException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tidak bisa menghubungi server. Coba lagi.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Center(
-          child: Text(
-            'Add Experience Form',
-          ),
-        ),
+        title: const Center(child: Text('Add Experience Form')),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
       ),
@@ -202,16 +320,17 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                     ),
                   ),
                   initialValue: _category,
-                  items: _categories
-                      .map((category) => DropdownMenuItem(
-                            value: category,
-                            child: Text(category),
-                          ))
+                  items: _categories.entries
+                      .map(
+                        (entry) => DropdownMenuItem<String>(
+                          value: entry.key,
+                          child: Text(entry.value),
+                        ),
+                      )
                       .toList(),
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      _category = newValue!;
-                    });
+                  onChanged: (value) {
+                    if (value == null) return;
+                    setState(() => _category = value);
                   },
                 ),
               ),
@@ -263,51 +382,22 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                   padding: const EdgeInsets.all(8.0),
                   child: ElevatedButton(
                     style: ButtonStyle(
-                      backgroundColor:
-                          WidgetStateProperty.all(Colors.indigo),
+                      backgroundColor: WidgetStateProperty.all(Colors.indigo),
                     ),
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        final startDate = _startDate!;
-                        final endDate = _endDate;
-                        showDialog(
-                          context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              title: const Text('Pengalaman berhasil ditambahkan!'),
-                              content: SingleChildScrollView(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Nama Pengalaman: $_experienceName'),
-                                    Text('Deskripsi: $_description'),
-                                    Text('Kategori: $_category'),
-                                    Text('URL Thumbnail: $_experienceLink'),
-                                    Text('Tanggal Mulai: ${_formatDate(startDate)}'),
-                                    Text('Tanggal Selesai: ${endDate == null ? '—' : _formatDate(endDate)}'),
-                                  ],
-                                ),
-                              ),
-                              actions: [
-                                TextButton(
-                                  child: const Text('OK'),
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                    _startDate = null;
-                                    _endDate = null;
-                                    _formKey.currentState!.reset();
-                                  },
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                      }
-                    },
-                    child: const Text(
-                      "Save",
-                      style: TextStyle(color: Colors.white),
-                    ),
+                    onPressed: _isSubmitting ? null : _submit,
+                    child: _isSubmitting
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Text(
+                            "Save",
+                            style: TextStyle(color: Colors.white),
+                          ),
                   ),
                 ),
               ),
